@@ -43,7 +43,7 @@ uint32_t PacketParser::parse(PacketBase* buffer)
 
             memcpy(reinterpret_cast<uint8_t*>(&_header), _pData, headerLen);
 
-//            if (_header.len > _maxLen)
+//            if (_header.len > _maxPacketLen)
 //            	reset();
 
             _pData += headerLen;

@@ -7,6 +7,8 @@
 #include "crc.h"
 #include "Parser/PacketParser.h"
 
+static const uint32_t FIRMWARE_ADDRESS = 0x0800A000;
+
 __attribute__((section ("DEVICE_INFO"))) static volatile constexpr DeviceInfoFlash DEVICE_INFO = {
 		.tag = DEVICE_INFO_TAG,
 		.deviceInfo = {
@@ -31,7 +33,7 @@ ApplicationWB::ApplicationWB(UARTWB55* uart, const uint32_t bufferSize)
 			.bootloaderPage = 0,
 			.bootloaderAddress = 0x08000000,
 			.firmwarePage = 10,
-			.firmwareAddress = 0x0800A000,
+			.firmwareAddress = FIRMWARE_ADDRESS,
 			.statusPage = 30,
 			.statusAddress = 0x0801E000,
 			.firmwarePacketSize = 0x400,
@@ -117,6 +119,7 @@ void ApplicationWB::onPacketReady(PacketBase* packet)
 
 bool ApplicationWB::appendOutputBuffer(PacketBase* packet)
 {
+	__disable_irq();
 	StandardHeader header = {.tag = 0x4F,
 		.len = static_cast<uint16_t>(packet->getLen()),
 		.crc = crc16(packet->getData(), packet->getLen()),
@@ -124,6 +127,7 @@ bool ApplicationWB::appendOutputBuffer(PacketBase* packet)
 	bool result = _output->receive(reinterpret_cast<const uint8_t*>(&header), sizeof(header));
 	result &= _output->receive(packet->getData(), packet->getLen());
 
+	__enable_irq();
 	return result;
 }
 

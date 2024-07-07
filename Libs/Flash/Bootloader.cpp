@@ -3,8 +3,8 @@
 #include "Interface/IOnPacketReady.h"
 #include "main.h"
 
-Bootloader::Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback, uint32_t (*timer)()) : _bootInfo(bootInfo),
-	_bootCallback(bootCallback), _timer(timer)
+Bootloader::Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback, uint32_t (*timer)(), const uint32_t period)
+	: _bootInfo(bootInfo), _bootCallback(bootCallback), _timer(timer), _period(period)
 {
 	FirmwareStatus* status = readFirmwareStatus(_bootInfo.statusAddress);
 	const uint32_t appAddress = SCB->VTOR;
@@ -289,10 +289,10 @@ void Bootloader::periodic()
 {
 	if (_timer)
 	{
-		static uint32_t localTimer = _timer() + 1000;
+		static uint32_t localTimer = _timer() + _period;
 		if (_timer() >= localTimer)
 		{
-			localTimer = _timer() + 1000;
+			localTimer = _timer() + _period;
 			if (_updateStatus == BootNeedToUpdate)
 				firmwareRequest();
 		}

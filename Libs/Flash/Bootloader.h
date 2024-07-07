@@ -199,13 +199,14 @@ class IOnPacketReady;
 class Bootloader : public FlashBase
 {
 public:
-	explicit Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback = nullptr, uint32_t (*timer)() = nullptr);
+	explicit Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback = nullptr, uint32_t (*timer)() = nullptr, \
+			const uint32_t period = 1000);
 	virtual ~Bootloader() = default;
 
 	void setCalcCrc(uint16_t (*calcCrc)(uint8_t* data, uint32_t size)) {_calcCrc = calcCrc;}
 	void setBootCallback(IOnPacketReady* bootCallback) {_bootCallback = bootCallback;}
 	void onPacketReceived(PacketBase* packet);
-	void periodic();
+	virtual void periodic();
 
 private:
 	FirmwareStatus* readFirmwareStatus(const uint32_t address);
@@ -229,5 +230,6 @@ private:
 	uint16_t (*_calcCrc)(uint8_t* data, uint32_t size) = nullptr;
 	IOnPacketReady* _bootCallback = nullptr;
 	uint32_t (*_timer)() = nullptr;
+	const uint32_t _period;
 
 };
