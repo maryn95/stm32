@@ -1,19 +1,30 @@
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"name": "openocd",
-			"type": "cortex-debug",
-			"request": "launch",
-			"cwd": "${workspaceRoot}",
-			"servertype": "openocd",
-			"executable": "./build/vs_code.elf",
-			"svdFile": "STM32WB55_CM4.svd",
-			"configFiles": [
-				"interface/stlink.cfg",
-				"target/stm32wbx.cfg"
-			],
-			"preLaunchTask": "Build"
-		}
-	]
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Microcontroller - ST-Link",
+            "cwd": "${workspaceFolder}",
+            "type": "cortex-debug",
+            "executable": "${command:cmake.launchTargetPath}", //or fixed file path: build/stm32h735g-dk-led.elf
+            "request": "launch",                //Use "attach" to connect to target w/o elf download
+            "servertype": "stlink",
+            "device": "STM32L4Q5CG",                       //MCU used, ex. "STM32H735IG"
+            "interface": "swd",
+            "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
+            "runToEntryPoint": "main",
+            "svdFile": "${workspaceFolder}/STM32L4Q5.svd",      //Path to SVD file to see registers
+            "v1": false,
+            "showDevDebugOutput": "both",
+            "gdbPath": "/usr/bin/gdb-multiarch",
+
+            /* Will get automatically detected if STM32CubeIDE is installed to default directory
+               or it can be manually provided if necessary.. */
+
+            /* If you use external loader, add additional arguments */
+            //"serverArgs": ["--extload", "path/to/ext/loader.stldr"],
+        }
+    ]
 }
