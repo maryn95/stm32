@@ -14,7 +14,6 @@
                 "STM32L4Q5xx"
             ],
             "compilerPath": "",
-            // "compilerPath": "/usr/bin/clang-14",
             "cStandard": "gnu11",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "${default}",

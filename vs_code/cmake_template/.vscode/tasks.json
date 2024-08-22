@@ -37,52 +37,20 @@
         },
         {
             "type": "shell",
-            "label": "CubeProg: Flash project (SWD)",
-            "command": "STM32_Programmer_CLI",
+            "label": "Flash project",
+            "command": "openocd",
             "args": [
-                "--connect",
-                "port=swd",
-                "mode=UR",  //Under reset
-                "--download", "${command:cmake.launchTargetPath}",
-                "-hardRst", // Hardware reset - if rst pin is connected
-                "-rst",     // Software reset (backup)
-                "--start"   // Start execution
+                "-f", 
+                "interface/stlink.cfg", 
+                "-f", 
+                "target/stm32l4x.cfg",
+                "-c",
+                "\"program ${command:cmake.launchTargetPath} verify exit reset\""
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "CubeProg: Flash project with defined serial number (SWD) - you must set serial number first",
-            "command": "STM32_Programmer_CLI",
-            "args": [
-                "--connect",
-                "port=swd",
-                "mode=UR",  //Under reset
-                "sn=<yourserialnumber>",
-                "--download", "${command:cmake.launchTargetPath}",
-                "-hardRst", // Hardware reset - if rst pin is connected
-                "-rst",     // Software reset (backup)
-                "--start"   // Start execution
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "CubeProg: List all available communication interfaces",
-            "command": "STM32_Programmer_CLI",
-            "args": [
-                "--list",
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": []
-        },
+        }
     ]
 }

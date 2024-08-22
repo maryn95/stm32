@@ -1,30 +1,30 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Microcontroller - ST-Link",
+            "name": "Debug via ST-Link",
             "cwd": "${workspaceFolder}",
             "type": "cortex-debug",
-            "executable": "${command:cmake.launchTargetPath}", //or fixed file path: build/stm32h735g-dk-led.elf
-            "request": "launch",                //Use "attach" to connect to target w/o elf download
-            "servertype": "stlink",
-            "device": "STM32L4Q5CG",                       //MCU used, ex. "STM32H735IG"
+            "executable": "${command:cmake.launchTargetPath}",  // path to .elf
+            "request": "launch",
+            "servertype": "openocd",
+            "device": "STM32L4Q5CG",                            // MCU
             "interface": "swd",
-            "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
+            "serialNumber": "",                                 // ST-Link ID if multiple at the same time are connected
             "runToEntryPoint": "main",
-            "svdFile": "${workspaceFolder}/STM32L4Q5.svd",      //Path to SVD file to see registers
+            "svdFile": "${workspaceFolder}/STM32L4Q5.svd",      // path to .svd
+            "configFiles": [
+				"interface/stlink.cfg",
+				"target/stm32l4x.cfg"
+			],
             "v1": false,
             "showDevDebugOutput": "both",
-            "gdbPath": "/usr/bin/gdb-multiarch",
+            
+            "gdbPath": "gdb-multiarch",
 
-            /* Will get automatically detected if STM32CubeIDE is installed to default directory
-               or it can be manually provided if necessary.. */
-
-            /* If you use external loader, add additional arguments */
-            //"serverArgs": ["--extload", "path/to/ext/loader.stldr"],
+            // "armToolchainPath": "",
+            // "openocdPath": "openocd",    
+            // "gdbPath": "/usr/bin/gdb-multiarch",
         }
     ]
 }
