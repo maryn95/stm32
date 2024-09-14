@@ -1,5 +1,4 @@
 #include "UARTDMAPhysics.h"
-#include "Transport/TransportBase.h"
 
 UARTDMAPhysics::UARTDMAPhysics(void (*initPeriphery)(), TransportBase* transport, \
 		UART_HandleTypeDef *uart, const uint32_t bufferSize) :
@@ -47,25 +46,21 @@ UARTDMAPhysics::~UARTDMAPhysics()
 //	return transmit(packet->getData(), packet->getLen());
 //}
 
-bool UARTDMAPhysics::receive(const uint8_t* pData, const uint32_t len)
+bool UARTDMAPhysics::receive(const uint8_t *pData, const uint32_t len)
 {
 	if (DMACNDTR != _lastCntValue)
 	{
+		TransportBase *transport = getTransport();
+		if (!transport)
+			return false;
+
 		const uint32_t _cntrData = DMACNDTR;
 		if (_cntrData <= _lastCntValue)
+			transport->onDataReceived(_pTail, _lastCntValue - _cntrData);
+		else // dma buffer is looped
 		{
-			TransportBase* transport = getTransport();
-			if (transport)
-				transport->onDataReceived(_pTail, _lastCntValue - _cntrData);
-		}
-		else //dma buffer is looped
-		{
-			TransportBase* transport = getTransport();
-			if (transport)
-			{
-				transport->onDataReceived(_pTail, _lastCntValue);
-				transport->onDataReceived(&_pBuffer[0], _bufferSize - _cntrData);
-			}
+			transport->onDataReceived(_pTail, _lastCntValue);
+			transport->onDataReceived(&_pBuffer[0], _bufferSize - _cntrData);
 		}
 
 		_pTail = &_pBuffer[_bufferSize - _cntrData];

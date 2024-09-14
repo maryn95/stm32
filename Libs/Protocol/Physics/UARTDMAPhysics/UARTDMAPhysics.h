@@ -11,6 +11,7 @@
 
 #include <main.h>
 #include "Physics/PhysicsBase.h"
+#include "Transport/TransportBase.h"
 
 class UARTDMAPhysics : public PhysicsBase
 {

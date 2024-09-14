@@ -1,5 +1,4 @@
 #include "CircularByteBuffer.h"
-#include "PacketBase/PacketBase.h"
 #include <string.h>
 
 CircularByteBuffer::CircularByteBuffer(const uint32_t size) : _size(size)

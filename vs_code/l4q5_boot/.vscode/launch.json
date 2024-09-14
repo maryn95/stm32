@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug via ST-Link",
+            "cwd": "${workspaceFolder}",
+            "type": "cortex-debug",
+            "executable": "${command:cmake.launchTargetPath}",  // path to .elf
+            "request": "launch",
+            "servertype": "openocd",
+            "device": "STM32L4Q5CG",                            // MCU
+            "interface": "swd",
+            "serialNumber": "",                                 // ST-Link ID if multiple at the same time are connected
+            "runToEntryPoint": "main",
+            "svdFile": "${workspaceFolder}/STM32L4Q5.svd",      // path to .svd
+            "configFiles": [
+				"interface/stlink.cfg",
+				"target/stm32l4x.cfg"
+			],
+            "v1": false,
+            "showDevDebugOutput": "both",
+            
+            "gdbPath": "gdb-multiarch",
+
+            // "armToolchainPath": "",
+            // "openocdPath": "openocd",    
+            // "gdbPath": "/usr/bin/gdb-multiarch",
+        }
+    ]
+}

@@ -2,10 +2,9 @@
 
 #include <stdint.h>
 #include "Interface/IOnPacketReady.h"
-
-class PhysicsBase;
-class ApplicationBase;
-class ParserBase;
+#include "Physics/PhysicsBase.h"
+#include "Application/ApplicationBase.h"
+#include "Parser/ParserBase.h"
 
 class TransportBase : public IOnPacketReady
 {
@@ -20,6 +19,7 @@ public:
 	void setApplication(ApplicationBase* application) {_application = application;}
 
 	bool onDataReceived(const uint8_t* pData, const uint32_t len);
+	void onPacketReady(PacketBase* packet) override;
 	virtual void periodic() = 0;
 
 protected:

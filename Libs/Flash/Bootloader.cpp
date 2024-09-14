@@ -1,21 +1,20 @@
 #include "Bootloader.h"
-#include "PacketBase/PacketBase.h"
-#include "Interface/IOnPacketReady.h"
 #include "main.h"
 
-Bootloader::Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback, uint32_t (*timer)(), const uint32_t period)
-	: _bootInfo(bootInfo), _bootCallback(bootCallback), _timer(timer), _period(period)
+Bootloader::Bootloader(FlashBase* flashBase, const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback, \
+	uint16_t (*_calcCrc)(uint8_t*, uint32_t))
+	: _flashBase(flashBase), _bootInfo(bootInfo), _bootCallback(bootCallback)
 {
 	FirmwareStatus* status = readFirmwareStatus(_bootInfo.statusAddress);
 	const uint32_t appAddress = SCB->VTOR;
-	if (appAddress == bootInfo.firmwareAddress)
+	if (appAddress == bootInfo.firmwareAddress) // already in the app
 	{
 		if (checkFirmwareSignature())
 			_updateStatus = BootFirmwareOk;
 	}
 	else
 	{
-		if (status->status == BootFirmwareOk)
+		if (status->status == BootFirmwareOk) // check the status page and jump to the app
 			jumpToApp(_bootInfo.firmwareAddress);
 
 		_deviceInfo = {_bootInfo.bootloaderVersion,
@@ -69,7 +68,7 @@ BootloaderErrorEnum Bootloader::checkNewDeviceInfo(const DeviceInfo& deviceInfo)
 	if (deviceInfo.firmwareMaxSize != _deviceInfo.firmwareMaxSize)
 		return BootFirmwareSizeError;
 
-	if (SCB->VTOR == _bootInfo.firmwareAddress)
+	if (SCB->VTOR == _bootInfo.firmwareAddress) // if we are in the app
 	{
 		if (deviceInfo.version.major < _deviceInfo.version.major)
 			return BootVersionError;
@@ -88,11 +87,17 @@ BootloaderErrorEnum Bootloader::checkNewDeviceInfo(const DeviceInfo& deviceInfo)
 
 BootloaderErrorEnum Bootloader::eraseStatusPage()
 {
-	return erasePages(_bootInfo.statusPage, 1) ? BootSuccess : BootEraseError;
+	if (!_flashBase)
+		return BootInitError;
+
+	return _flashBase->erasePages(_bootInfo.statusPage, 1) ? BootSuccess : BootEraseError;
 }
 
 BootloaderErrorEnum Bootloader::writeFirmware(const uint32_t packetNum, const uint8_t* data, const uint32_t size, const uint32_t offset)
 {
+	if (!_flashBase)
+		return BootInitError;
+
 	if (_updateStatus != BootIsUpdating)
 		return BootDeviceInfoError;
 
@@ -116,12 +121,12 @@ BootloaderErrorEnum Bootloader::writeFirmware(const uint32_t packetNum, const ui
 	{
 		const uint32_t pageToErase = _bootInfo.firmwarePage + offset / pageSize;
 		const uint32_t numPages = (size % pageSize == 0 ? size / pageSize : size / pageSize + 1);
-		if (!erasePages(pageToErase, numPages))
+		if (!_flashBase->erasePages(pageToErase, numPages))
 			return BootEraseError;
 	}
 
 	const uint32_t address = _bootInfo.firmwareAddress + offset;
-	if (!write(address, data, size))
+	if (!_flashBase->write(address, data, size))
 		return BootWriteError;
 
 	return BootSuccess;
@@ -146,18 +151,18 @@ BootloaderErrorEnum Bootloader::finishUpload(const uint16_t firmwareCrc, const u
 
 BootloaderErrorEnum Bootloader::updateStatusPage()
 {
-	FirmwareStatus status = {.status = BootFirmwareOk,
-			.updateCounter = 1,
-			.updateTimeUnix = 0,
-			.crc = 0
-	};
-	return write(_bootInfo.statusAddress, reinterpret_cast<const uint8_t*>(&status), sizeof(FirmwareStatus)) ? BootSuccess : BootWriteError;
+	if (!_flashBase)
+		return BootInitError;
+
+	FirmwareStatus status = {BootFirmwareOk, 1, 0, 0};
+	return _flashBase->write(_bootInfo.statusAddress, reinterpret_cast<const uint8_t*>(&status), sizeof(FirmwareStatus)) ? BootSuccess : BootWriteError;
 }
 
 BootloaderErrorEnum Bootloader::abortUpload()
 {
 	if (_updateStatus != BootUpdateFinished)
 		_updateStatus = BootNeedToUpdate;
+
 	return BootSuccess;
 }
 
@@ -271,7 +276,7 @@ void Bootloader::onPacketReceived(PacketBase* packet)
 
 	case BootSystemReset:
 		if (_updateStatus == BootUpdateFinished)
-			NVIC_SystemReset();
+			__NVIC_SystemReset();
 		break;
 
 	default:
@@ -282,19 +287,5 @@ void Bootloader::onPacketReceived(PacketBase* packet)
 	{
 		answer.prepend(&BOOTLOADER_COMMAND, sizeof(BOOTLOADER_COMMAND));
 		_bootCallback->onPacketReady(&answer);
-	}
-}
-
-void Bootloader::periodic()
-{
-	if (_timer)
-	{
-		static uint32_t localTimer = _timer() + _period;
-		if (_timer() >= localTimer)
-		{
-			localTimer = _timer() + _period;
-			if (_updateStatus == BootNeedToUpdate)
-				firmwareRequest();
-		}
 	}
 }

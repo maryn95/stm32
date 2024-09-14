@@ -1,6 +1,4 @@
 #include "TransportBase.h"
-#include "Physics/PhysicsBase.h"
-#include "Parser/ParserBase.h"
 
 TransportBase::TransportBase(PhysicsBase* physics, ApplicationBase* application) : \
 		_physics(physics), _application(application)
@@ -20,8 +18,14 @@ bool TransportBase::onDataReceived(const uint8_t* pData, const uint32_t len)
 	if (!_parser || !pData || len == 0)
 		return false;
 
-	if (_parser)
-		_parser->receive(pData, len);
-
+	_parser->receive(pData, len);
 	return true;
+}
+
+void TransportBase::onPacketReady(PacketBase* packet)
+{
+	if (!packet || !application())
+		return;
+
+	application()->onPacketReceived(this, packet);
 }

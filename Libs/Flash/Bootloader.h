@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FlashBase.h"
+#include "PacketBase/PacketBase.h"
+#include "Interface/IOnPacketReady.h"
 
 #define DEVICE_INFO_TAG {0x11, 0x07, 0x5A, 0x78, 0x3B, 0x02, 0x96, 0xCC, 0xF0, 0xF0}
 static constexpr uint8_t DEVICE_INFO_TAG_LEN = 10;
@@ -87,6 +89,8 @@ enum BootloaderErrorEnum : uint8_t
 	BootDeviceInfoError = 0x22,
 	BootSignatureError = 0x23,
 	BootAlreadyUpdated = 0x24,
+
+	BootInitError = 0xF0
 
 };
 
@@ -193,20 +197,17 @@ typedef struct
 } BootFinishUploadAnswer_t;
 #pragma pack(pop)
 
-class PacketBase;
-class IOnPacketReady;
-
-class Bootloader : public FlashBase
+class Bootloader
 {
 public:
-	explicit Bootloader(const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback = nullptr, uint32_t (*timer)() = nullptr, \
-			const uint32_t period = 1000);
+	explicit Bootloader(FlashBase* flashBase, const BootloaderInfo& bootInfo, IOnPacketReady* bootCallback = nullptr, \
+		uint16_t (*_calcCrc)(uint8_t*, uint32_t) = nullptr);
 	virtual ~Bootloader() = default;
 
 	void setCalcCrc(uint16_t (*calcCrc)(uint8_t* data, uint32_t size)) {_calcCrc = calcCrc;}
 	void setBootCallback(IOnPacketReady* bootCallback) {_bootCallback = bootCallback;}
 	void onPacketReceived(PacketBase* packet);
-	virtual void periodic();
+	virtual void periodic() {}
 
 private:
 	FirmwareStatus* readFirmwareStatus(const uint32_t address);
@@ -221,6 +222,7 @@ private:
 	bool firmwareRequest();
 
 private:
+	FlashBase* _flashBase = nullptr;
 	const BootloaderInfo _bootInfo;
 	DeviceInfo _deviceInfo;
 
@@ -229,7 +231,4 @@ private:
 
 	uint16_t (*_calcCrc)(uint8_t* data, uint32_t size) = nullptr;
 	IOnPacketReady* _bootCallback = nullptr;
-	uint32_t (*_timer)() = nullptr;
-	const uint32_t _period;
-
 };

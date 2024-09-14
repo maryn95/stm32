@@ -14,10 +14,7 @@ ParserBase::~ParserBase()
 
 void ParserBase::receive(const uint8_t* pData, const uint32_t len)
 {
-    if (!pData || len == 0)
-        return;
-
-    if (!_buffer)
+    if (!_buffer || !pData || len == 0)
         return;
 
     _buffer->receive(pData, len);

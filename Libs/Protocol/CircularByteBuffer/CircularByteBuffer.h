@@ -1,8 +1,7 @@
 #pragma once
 
+#include "PacketBase/PacketBase.h"
 #include <stdint.h>
-
-class PacketBase;
 
 class CircularByteBuffer
 {
